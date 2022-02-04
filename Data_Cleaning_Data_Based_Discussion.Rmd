@@ -1,0 +1,267 @@
+---
+title: "ProblemSet1"
+author: "Alwin Eldhose Babu"
+date: "10/14/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+```
+# 1. Basic R Programing
+## 1.1 Function that takes in Time in HHMM and returns it in HH.MM
+_The function __timeconverter__ first calculates the Hour value which is then added to the decimated minute values and stored in time_converted and returned by the function_
+```{r}
+time_converter <- function(time_hhmm) 
+{
+  
+  time_converted <- (time_hhmm %/% 100) + ((time_hhmm%%100)/60)
+  return(time_converted)
+}
+
+time_converter(730) #Input 1
+time_converter(1245) #Input 2
+```
+
+
+## Vector-based questions
+```{r}
+set.seed(1)
+v <- sample(10, 20, replace=TRUE) - 5
+v
+```
+
+## 1.2 Using a for loop to extract positive numbers
+* First a null vector __pos_v1__ is created for storing positive numbers. 
+* Then a for loop is created that loops through the vector 20 times
+* Within the for loop, every element of the vector to be checked is tested for positivity
+* If the element is found to be positive, the element is appended to the vector created for storing positive numbers
+* The positive vector is then printed to display the positive elements
+```{r}
+# Reference : Prof. Ott's notes - Creating vectors in loop
+pos_v1 <- NULL
+for(i in 1:20)
+  {
+   if(v[i]>0) {
+     pos_v1 <- c(pos_v1, v[i]) 
+   }
+}
+pos_v1
+
+```
+
+
+## 1.3 Using logical indexing to extract positive numbers
+* A vector __pos_l__ is created which is a logical vector based on the positivity of the values in __v__
+* The logical vector is then passed as an argument to the original vector __v__ to print the positive valules of __v__
+```{r}
+# Reference : Prof. Ott's notes - Logical Indexings
+pos_l <- v>0
+v[pos_l]
+
+```
+
+## 1.4 Testing the negativity of three vectors
+* The function __neg_check__ is passed with an argumentw which is the original vector __v__ for which positivity needs to be tested
+* A vector __neg_logics__ is created with logical values based on the negative values of the vector v
+* The vector is then passed on to the __any__ function to check if any elements in the vector have a logical value identified to be false
+* If the vector is found to have any negative elements, a corresponding statement is printed stating that the vector contains negative elements
+
+```{r}
+# Reference : To get the name of object : https://stackoverflow.com/questions/10520772/in-r-how-to-get-an-objects-name-after-it-is-sent-to-a-function
+
+v1 <- 9
+v2 <- c(1,2)
+v3 <- c(2,3,-4)
+
+neg_check <- function(v) 
+  {
+    neg_logics <- v<0
+    if(any(neg_logics)) #any function checks all elements in a vector for the logical value of the condition provided
+    {
+      cat("The vector", deparse(substitute(v)), "has negative elements") #deparse(substitute) returns the original name of the object
+    }
+  }
+
+neg_check(v1)
+neg_check(v2)
+neg_check(v3)
+```
+
+
+# 2. Data Exploration
+
+## 2.1 Basic Data Description
+### 2.1.1. What the answer looks like
+_Yes, it is possible to answer the question as to which country among South Africa and Australia is more dangerous in terms of shark attacks on people. This would require access to a dataset which provides the type of attacks on people with the country and the time period. It could be possible to answer the question based on the average or the total number of attacks that have occured in each of these countries. It could also depend on the population of sharks and people in each country. Going by the population of Australia being lesser, my guess would be that the cases are lesser in Australia_
+
+### 2.1.2 Loading the data and finding the number of variables and cases
+* The data is read using __read_excel__ function and stored onto a variable called __shark_data
+* The __dim()__ function is then used to get the number of rows and columns in the data
+```{r, cache=TRUE}
+    shark_data <- read_excel("GSAF5.xls")
+    dim(shark_data)
+    
+```
+
+_From the answer, we can recognize that there are 25827 rows of cases and 24 variables_
+
+
+### 2.1.3. Loading the variable names in the data
+```{r}
+  head(shark_data)
+```
+* Variables and their estimated meanings
+  * Case Number: The number of the case on the given date
+  * Date: The date of the case (attack)
+  * Year: Year of the case
+  * Type: Type of the attack (provoked, unprovoked, etc.)
+  * Country: The country of attack
+  * Area: Area/State in the specified country
+  * Location: Specific location in the area
+  * Activity: Activity that was being performed by the person (subject)
+  * Name: Name of the person (subject)
+  * Sex: Sex of the person (subject)
+  * Age: Age of the person (subject)
+  * Injury: Injury occurred to the person (subject)
+  * Fatal : Whether the attack was fatal or not
+  * Time: Time of the attack
+  * Species: Species of the shark involved
+  * Investigator or source: The source of information for attack
+  * pdf: The pdf file containing the source data
+  * href formula: Link to the source data file
+  * href: Link to the source data file
+  * Case Number: The number of the case on the given date
+  * Case Number: The number of the case on the given date
+  * Original order: Original order of the listing
+
+_To answer the question, we would need the following variables: Country, Fatal_
+
+_I think we have sufficient data to solve the problem. However, from the head() listing above, it is noticed that there are some missing values which we would need to clean before processing._
+
+
+## 2.2 Explore data
+### 2.2.1. Number of countries
+We use the __length()__ and __unique()__ functions to find the number of unique countries in the dataset
+```{r}
+length(unique(shark_data$Country))
+
+```
+
+### 2.2.2. Browsing country names
+We sample the country names from the unique country list using the __sample()__ function
+```{r}
+set.seed(1)
+sample(unique(shark_data$Country), 10)
+```
+_From the above output, it is visible that not all the countries printed are correct. For example, Southwest Pacific Ocean is not an actual country._
+
+
+### 2.2.3. Data type of Year of attack
+We use the __class()__ function to find the data type of the variable __Year__
+```{r}
+class(shark_data$Year)
+```
+
+The above output gives Year to be a character object. The expectation was for Year to be a numeric class
+
+
+### 2.2.4. Missing values in Year
+For counting the number of NA values in 'Year', we use __is.na()__ function
+```{r}
+sum(is.na(shark_data$Year))
+```
+_The output shows that we have a lot of missing values for the variable Year. Out of the 25827 rows, we have missing values for 19129 of them. This suggests that the data quality is not great and lot of the observations do not have details._
+
+
+
+### 2.2.5. Finding the minimum, maximum and median value of Year
+We use the __median()__, __min()__, and __max()__ functions to find the median, minimum and maximum values of yeat. Since the class of Year was determined to be char, we convert it into numeric within the function using the function __as.numeric()__
+```{r}
+shark_data <- shark_data %>% mutate(Year = as.numeric(Year)) 
+median(shark_data$Year, na.rm = TRUE) 
+min(shark_data$Year, na.rm = TRUE) 
+max(shark_data$Year, na.rm = TRUE)
+```
+
+
+### 2.2.6. Selecting dates for Year = 0
+The __filter()__ function is used for finding the rows where Year = 0 and then the __head()__ function is used for outputting the first 10 elements of the Date where Year = 0
+```{r}
+shark_data_0 <-filter(shark_data,Year == 0)
+  head(shark_data_0["Date"], 10)
+```
+_Here, we see that the dates are not accurate. For example the first row, Ca. 214 B.C. has a date which is not realistic._
+
+### 2.2.7 Extracting date of Ca. 725 B.C.
+We use the filter function again to find the details of the row with the date Ca. 725 B.C.
+```{r}
+  shark_data_date <- filter(shark_data, Date == "Ca. 725 B.C.")
+  shark_data_date
+
+```
+_The output suggests that this row dating back to 725 B.C.was identified later during excavations and was documented in what seems to be a research paper of 1958._
+
+## 2.3 Clean Data
+
+### 2.3.1 Renaming Fatal row and dropping all columns that are not required
+The __rename()__ function is used for renaming the Fatal (Y/N) column to fatal and the object __shark_data_sub__ which is a subset of the original dataset is created with the columns that are not required for analysis
+```{r}
+shark_data_sub <- shark_data %>% 
+rename(fatal = 'Fatal (Y/N)') %>% 
+  select(Year,Country,fatal)
+shark_data_sub
+```
+
+
+## 2.3.2 Focusing on reasonable recent time span only
+The dataset is filtered for a range of last 21 years starting at the 21st century
+```{r}
+shark_data_sub <- shark_data_sub %>% filter(between(Year,2000,2019))
+shark_data_sub
+```
+_The dataset now contains 2455 rows. The original dataset contained `r nrow(shark_data)` rows and out of these, we identified that 19129 rows contained NA values. Thus of the 6698 rows with Year values, we have roughly used 1/3 rd of the dataset_
+
+## 2.3.3 Different values in the fatal variable
+The unique function is used again for finding the unique values of the __fatal__ variable
+```{r}
+unique(shark_data_sub$fatal)
+```
+_The unique values contain "N" and "Y" which are variables corresponding to No and Yes respectively. The value NA is probably because this value was not available. The "F" value seems to be a typo and it is difficult to use it since we don't know what it means. However, "M" could have been a data entry error and actually an "N'. The values, "UNKNOWN" and "2017" are unusable.
+We use the above rationale to convert the fatal column below_
+
+## 4 Converting the fatal column 
+The dataset is mutated for the fatal column to be not containing the irrelevant values of F, UNKOWN, 2017
+```{r}
+# Reference: https://stackoverflow.com/questions/24459752/can-dplyr-package-be-used-for-conditional-mutating
+shark_data_sub <- shark_data_sub %>%
+  mutate(fatal = na_if(fatal,"NA")) %>% 
+  mutate(fatal = na_if(fatal,"F")) %>% 
+  mutate(fatal = na_if(fatal,"UNKNOWN")) %>% 
+  mutate(fatal = na_if(fatal,"2017")) %>%
+  mutate(fatal = ifelse(fatal=='Y', TRUE, FALSE))
+```
+The value NA, "F","UNKNOWN" and "2017" are unusable and are removed using na_if() function. However, "M" could have been a data entry error and actually an "N', hence converted to FALSE. The value Y is converted to a TRUE logical value.
+
+## 2.4 Australia or South Africa
+
+### 2.4.1 Filtering values only from Australia and South Africa
+We use the __filter()__ function to filter the country values of Australia and South Africa. We then use the __group_by()__ function to group the values by Country and then use __summarise()__ to add the 'Number of Observations' column and 'Fatality Percentage' column.
+
+```{r}
+shark_data_sub %>% filter(Country == "AUSTRALIA" | Country == "SOUTH AFRICA") %>% 
+  group_by(Country) %>% 
+  summarise('Numnber of Observations'=n(),'Fatality Percentage'=sum(fatal,na.rm=TRUE)/n())
+
+
+```
+_We identify that the fatality percentage for Australia is found to be 7.8%, while that of South Africa is found to be 15.38%. We also identify that the cases for australia are higher, i.e. 433, while the cases for South Africa are lower, i.e. 143._
+
+### 2.4.2 Which country is more dangerous?
+I think that South Africa is more dangerous as the percentage of fatal accidents due to sharks is more here although the number of accidents were lesser. This analysis can be potentially used to determine the behavior of people in these countries (depending on whether the incidents were provoked or not) and also determine the fishes and sealife in these countries. It could also lead to the tourism in these countries being affected due to fear of shark incidents.
+
+
+### 2.4.3 Ethical Issues 
+There are some ethical issues with the given dataset. The original dataset contained the names and location of individuals, which is Personally Identifiable Information (PII). It is not possible to confirm if adequate permisssions were in place for using the personal information of these individuals, living or dead. This could lead to potential harm or pain to the individuals or the families involved. This PII data can be clubbed with the location data for harmful usage of the same by parties with vested interests. The data could also lead to tourism industry being affected by the same due to the fear of shark incidents for the countries involved.
